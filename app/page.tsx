@@ -15,23 +15,31 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-gray-100">
-      <h1 className="text-3xl font-bold mb-4">Pokémon AI Grader</h1>
+    <main style={{ backgroundColor: "#f3f4f6", minHeight: "100vh", padding: "2rem", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+      <h1 style={{ fontSize: "2rem", fontWeight: "bold", marginBottom: "1rem" }}>Pokémon AI Grader</h1>
 
       <input
         type="file"
         accept="image/*"
         onChange={handleImageUpload}
-        className="mb-4 px-4 py-2 border border-gray-400 rounded cursor-pointer bg-white text-black"
+        style={{
+          padding: "10px",
+          backgroundColor: "#fff",
+          color: "#000",
+          border: "2px solid #333",
+          borderRadius: "5px",
+          cursor: "pointer",
+          marginBottom: "20px"
+        }}
       />
 
       {previewUrl && (
-        <div className="shadow-md rounded-lg p-4 bg-white">
-          <p className="mb-2 font-semibold">Preview:</p>
+        <div style={{ backgroundColor: "#fff", padding: "1rem", borderRadius: "8px", boxShadow: "0 2px 6px rgba(0,0,0,0.1)" }}>
+          <p style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>Preview:</p>
           <img
             src={previewUrl}
             alt="Card preview"
-            className="max-w-xs border border-gray-300 rounded"
+            style={{ maxWidth: "300px", border: "1px solid #ccc", borderRadius: "4px" }}
           />
         </div>
       )}
