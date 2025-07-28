@@ -22,7 +22,7 @@ export default function Home() {
         type="file"
         accept="image/*"
         onChange={handleImageUpload}
-        className="mb-4"
+        className="mb-4 px-4 py-2 border border-gray-400 rounded cursor-pointer bg-white text-black"
       />
 
       {previewUrl && (
@@ -38,4 +38,6 @@ export default function Home() {
     </main>
   );
 }
+
+
 
