@@ -35,7 +35,7 @@ model = load_model(MODEL_PATH)
 # Define label classes (must match training order)
 class_names = ["psa10", "psa8", "psa9"]  # This depends on how your folders were named
 
-UPLOAD_DIR = "uploads"
+UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @app.post("/grade")
@@ -62,6 +62,8 @@ async def grade_card(file: UploadFile = File(...)):
             "confidence": round(confidence, 2)
         })
 
-    except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
+except Exception as e:
+    print(f"Error during grading: {e}")
+    return JSONResponse({"error": str(e)}, status_code=500)
+
 
