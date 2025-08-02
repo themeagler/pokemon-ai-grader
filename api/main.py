@@ -21,28 +21,27 @@ app.add_middleware(
 
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "psa_model.keras")
 MODEL_URL = "https://raw.githubusercontent.com/themeagler/psa-pokemon-backend/main/api/psa_model.keras"
-
-model = None  # Global variable for model
-
-@app.on_event("startup")
-def load_or_download_model():
-    global model
-    if not os.path.exists(MODEL_PATH):
-        print("Downloading model file...")
-        urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
-        print("Download complete.")
-    model = load_model(MODEL_PATH)
-
+model = None  # Global placeholder
 class_names = ["psa10", "psa8", "psa9"]
 
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+@app.on_event("startup")
+def load_or_download_model():
+    global model
+    if not os.path.exists(MODEL_PATH):
+        print("Model file not found. Downloading...")
+        urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
+        print("Download complete.")
+    model = load_model(MODEL_PATH)
+    print("Model loaded successfully.")
+
 @app.post("/grade")
 async def grade_card(file: UploadFile = File(...)):
     try:
         file_path = os.path.join(UPLOAD_DIR, file.filename)
-
+        
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
@@ -61,4 +60,3 @@ async def grade_card(file: UploadFile = File(...)):
 
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
-
