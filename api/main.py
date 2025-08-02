@@ -20,21 +20,18 @@ app.add_middleware(
 )
 
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "psa_model.keras")
-MODEL_URL = "https://github.com/themeagler/psa-pokemon-backend/raw/main/api/psa_model.keras"
+MODEL_URL = "https://raw.githubusercontent.com/themeagler/psa-pokemon-backend/main/api/psa_model.keras"
 
-model = None
+model = None  # Global variable for model
 
 @app.on_event("startup")
-def startup_event():
+def load_or_download_model():
     global model
     if not os.path.exists(MODEL_PATH):
-        print("Model not found. Downloading...")
+        print("Downloading model file...")
         urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
         print("Download complete.")
-    else:
-        print("Model found. Loading...")
     model = load_model(MODEL_PATH)
-    print("Model loaded.")
 
 class_names = ["psa10", "psa8", "psa9"]
 
