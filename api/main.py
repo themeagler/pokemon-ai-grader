@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 import os
 import shutil
 import urllib.request
+
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
 import numpy as np
@@ -19,39 +20,40 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Constants
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "psa_model.keras")
 MODEL_URL = "https://raw.githubusercontent.com/themeagler/psa-pokemon-backend/main/api/psa_model.keras"
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-model = None
+# Class names
+class_names = ["psa10", "psa8", "psa9"]
 
 def get_model():
-    global model
-    if model is None:
-        if not os.path.exists(MODEL_PATH):
-            print("Downloading model...")
-            urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
-            print("Model downloaded.")
-        model = load_model(MODEL_PATH)
-        print("Model loaded.")
-    return model
-
-class_names = ["psa10", "psa8", "psa9"]
+    if not os.path.exists(MODEL_PATH):
+        print("Model not found. Downloading...")
+        urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
+        print("Download complete.")
+    return load_model(MODEL_PATH)
 
 @app.post("/grade")
 async def grade_card(file: UploadFile = File(...)):
     try:
+        # Save file
         file_path = os.path.join(UPLOAD_DIR, file.filename)
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
+        # Load model on demand
+        model = get_model()
+
+        # Preprocess image
         img = image.load_img(file_path, target_size=(224, 224))
         img_array = image.img_to_array(img) / 255.0
         img_array = np.expand_dims(img_array, axis=0)
 
-        model_instance = get_model()
-        predictions = model_instance.predict(img_array)
+        # Predict
+        predictions = model.predict(img_array)
         predicted_class = class_names[np.argmax(predictions[0])]
         confidence = float(np.max(predictions[0]))
 
