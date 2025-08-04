@@ -14,7 +14,7 @@ app = FastAPI()
 # Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Update this in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -32,30 +32,39 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 def load_or_download_model():
     global model
     print(f"Checking for model at {MODEL_PATH}")
-    if not os.path.exists(MODEL_PATH):
-        print("Model not found. Downloading...")
-        urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
-        print("Download complete.")
-    else:
-        print("Model found. Skipping download.")
-    model = load_model(MODEL_PATH)
-    print("Model loaded successfully.")
+    try:
+        if not os.path.exists(MODEL_PATH):
+            print("Model not found. Downloading from GitHub...")
+            urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
+            print("Download complete.")
+        else:
+            print("Model already exists locally. Skipping download.")
+
+        model = load_model(MODEL_PATH)
+        print("Model loaded successfully.")
+    except Exception as e:
+        print(f"Error loading model: {e}")
+        raise RuntimeError("Startup failed: Could not load model")
 
 # Define label classes
 class_names = ["psa10", "psa8", "psa9"]
 
+# Grading endpoint
 @app.post("/grade")
 async def grade_card(file: UploadFile = File(...)):
     try:
         file_path = os.path.join(UPLOAD_DIR, file.filename)
 
+        # Save uploaded image
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
+        # Preprocess image
         img = image.load_img(file_path, target_size=(224, 224))
         img_array = image.img_to_array(img) / 255.0
         img_array = np.expand_dims(img_array, axis=0)
 
+        # Predict grade
         predictions = model.predict(img_array)
         predicted_class = class_names[np.argmax(predictions[0])]
         confidence = float(np.max(predictions[0]))
