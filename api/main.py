@@ -29,12 +29,18 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 # Class names
 class_names = ["psa10", "psa8", "psa9"]
 
+# Load model lazily only when needed
+_model = None
 def get_model():
-    if not os.path.exists(MODEL_PATH):
-        print("Model not found. Downloading...")
-        urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
-        print("Download complete.")
-    return load_model(MODEL_PATH)
+    global _model
+    if _model is None:
+        if not os.path.exists(MODEL_PATH):
+            print("Model not found. Downloading...")
+            urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
+            print("Download complete.")
+        _model = load_model(MODEL_PATH)
+        print("Model loaded successfully.")
+    return _model
 
 @app.post("/grade")
 async def grade_card(file: UploadFile = File(...)):
@@ -44,10 +50,8 @@ async def grade_card(file: UploadFile = File(...)):
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        # Load model on demand
+        # Load model and preprocess image
         model = get_model()
-
-        # Preprocess image
         img = image.load_img(file_path, target_size=(224, 224))
         img_array = image.img_to_array(img) / 255.0
         img_array = np.expand_dims(img_array, axis=0)
